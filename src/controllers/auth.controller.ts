@@ -1,8 +1,15 @@
 import config from 'config';
 import { CookieOptions, NextFunction, Request, Response } from 'express';
 import { CreateUserInput, LoginUserInput } from '../schema/user.schema';
-import { createUser, findUser, signToken } from '../services/user.service';
+import {
+  createUser,
+  findUser,
+  findUserById,
+  signToken,
+} from '../services/user.service';
 import AppError from '../utils/appError';
+import redisClient from '../utils/connectRedis';
+import { signJwt, verifyJwt } from '../utils/jwt';
 
 // Exclude this fields from the response
 export const excludedFields = ['password'];
@@ -13,6 +20,15 @@ const accessTokenCookieOptions: CookieOptions = {
     Date.now() + config.get<number>('accessTokenExpiresIn') * 60 * 1000
   ),
   maxAge: config.get<number>('accessTokenExpiresIn') * 60 * 1000,
+  httpOnly: true,
+  sameSite: 'lax',
+};
+
+const refreshTokenCookieOptions: CookieOptions = {
+  expires: new Date(
+    Date.now() + config.get<number>('refreshTokenExpiresIn') * 60 * 1000
+  ),
+  maxAge: config.get<number>('refreshTokenExpiresIn') * 60 * 1000,
   httpOnly: true,
   sameSite: 'lax',
 };
@@ -50,6 +66,8 @@ export const registerHandler = async (
   }
 };
 
+let refreshTokens: string[] = [];
+
 export const loginHandler = async (
   req: Request<{}, {}, LoginUserInput>,
   res: Response,
@@ -67,16 +85,82 @@ export const loginHandler = async (
       return next(new AppError('Invalid email or password', 401));
     }
 
-    // Create an Access Token
-    const { accessToken } = await signToken(user);
+    // Create the Access and refresh Tokens
+    const { access_token, refresh_token } = await signToken(user);
 
     // Send Access Token in Cookie
-    res.cookie('accessToken', accessToken, accessTokenCookieOptions);
+    res.cookie('access_token', access_token, accessTokenCookieOptions);
+    res.cookie('refresh_token', refresh_token, refreshTokenCookieOptions);
+
+    // Add refresh token to the array
+    refreshTokens.push(refresh_token);
 
     // Send Access Token
     res.status(200).json({
       status: 'success',
-      accessToken,
+      access_token,
+    });
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+// Refresh tokens
+
+export const refreshAccessTokenHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Get the refresh token from cookie
+    const refresh_token = req.cookies.refresh_token as string;
+
+    // Validate the Refresh token
+    const decoded = verifyJwt<{ sub: string }>(
+      refresh_token,
+      'refreshTokenPublicKey'
+    );
+    const message = 'Could not refresh access token';
+    if (!decoded) {
+      return next(new AppError(message, 403));
+    }
+
+    // Check if the refresh token is in the refreshTokens array
+    if (!refreshTokens.includes(refresh_token)) {
+      return next(
+        new AppError('Refresh token has already been used, login again', 403)
+      );
+    }
+
+    // Check if the user has a valid session
+    const session = await redisClient.get(decoded.sub);
+    if (!session) {
+      return next(new AppError(message, 403));
+    }
+
+    // Check if the user exist
+    const user = await findUserById(JSON.parse(session)._id);
+
+    if (!user) {
+      return next(new AppError(message, 403));
+    }
+
+    // Sign new access token
+    const access_token = signJwt({ sub: user._id }, 'accessTokenPrivateKey', {
+      expiresIn: `${config.get<number>('accessTokenExpiresIn')}m`,
+    });
+
+    // Send the access token as cookie
+    res.cookie('access_token', access_token, accessTokenCookieOptions);
+
+    // Remove refresh_token from the array
+    refreshTokens = refreshTokens.filter((token) => token !== refresh_token);
+
+    // Send response
+    res.status(200).json({
+      status: 'success',
+      access_token,
     });
   } catch (err: any) {
     next(err);

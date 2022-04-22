@@ -11,22 +11,25 @@ export const deserializeUser = async (
 ) => {
   try {
     // Get the token
-    let accessToken;
+    let access_token;
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith('Bearer')
     ) {
-      accessToken = req.headers.authorization.split(' ')[1];
-    } else if (req.cookies.accessToken) {
-      accessToken = req.cookies.accessToken;
+      access_token = req.headers.authorization.split(' ')[1];
+    } else if (req.cookies.access_token) {
+      access_token = req.cookies.access_token;
     }
 
-    if (!accessToken) {
+    if (!access_token) {
       return next(new AppError('You are not logged in', 401));
     }
 
     // Validate Access Token
-    const decoded = verifyJwt<{ sub: string }>(accessToken);
+    const decoded = verifyJwt<{ sub: string }>(
+      access_token,
+      ' accessTokenPublicKey'
+    );
 
     if (!decoded) {
       return next(new AppError(`Invalid token or user doesn't exist`, 401));

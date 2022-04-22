@@ -20,15 +20,18 @@ app.use(cookieParser());
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
 // Routes
-app.use('/users', userRouter);
+app.use('/api/users', userRouter);
 
 // Testing
-app.get('/healthChecker', (req: Request, res: Response, next: NextFunction) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Welcome to CodevoWeb😂😂👈👈',
-  });
-});
+app.get(
+  '/api/healthChecker',
+  (req: Request, res: Response, next: NextFunction) => {
+    res.status(200).json({
+      status: 'success',
+      message: 'Welcome to CodevoWeb😂😂👈👈',
+    });
+  }
+);
 
 // UnKnown Routes
 app.all('*', (req: Request, res: Response, next: NextFunction) => {

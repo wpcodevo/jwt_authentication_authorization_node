@@ -1,5 +1,9 @@
 import express from 'express';
-import { loginHandler, registerHandler } from '../controllers/auth.controller';
+import {
+  loginHandler,
+  refreshAccessTokenHandler,
+  registerHandler,
+} from '../controllers/auth.controller';
 import {
   getAllUsersHandler,
   getMeHandler,
@@ -17,6 +21,9 @@ router.post('/register', validate(createUserSchema), registerHandler);
 
 // Login user route
 router.post('/login', validate(loginUserSchema), loginHandler);
+
+// Refresh access toke route
+router.get('/refresh', refreshAccessTokenHandler);
 
 router.use(deserializeUser, requireUser);
 
