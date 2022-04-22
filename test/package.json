@@ -1,0 +1,8 @@
+{
+  "name": "Jwt_Auth",
+  "version": "1.0.0",
+  "description": "Jwt Authentication with Node.js, Typegoose, mongoDB, Mongoose, Docker, Redis, and JsonWebToken",
+  "main": "app.ts",
+  "author": "Codevo",
+  "license": "MIT"
+}
