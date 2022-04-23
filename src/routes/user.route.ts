@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   loginHandler,
+  logoutHandler,
   refreshAccessTokenHandler,
   registerHandler,
 } from '../controllers/auth.controller';
@@ -26,6 +27,9 @@ router.post('/login', validate(loginUserSchema), loginHandler);
 router.get('/refresh', refreshAccessTokenHandler);
 
 router.use(deserializeUser, requireUser);
+
+// Logout User
+router.get('/logout', logoutHandler);
 
 // Admin Get Users route
 router.get('/', restrictTo('admin'), getAllUsersHandler);

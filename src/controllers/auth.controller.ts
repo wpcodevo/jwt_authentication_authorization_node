@@ -166,3 +166,18 @@ export const refreshAccessTokenHandler = async (
     next(err);
   }
 };
+
+export const logoutHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    res.cookie('access_token', '', { maxAge: 1 });
+    res.cookie('refresh_token', '', { maxAge: 1 });
+
+    res.redirect(config.get<string>('origin'));
+  } catch (err: any) {
+    next(err);
+  }
+};
