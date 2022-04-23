@@ -106,6 +106,10 @@ export const loginHandler = async (
 };
 
 // Refresh tokens
+const logout = (res: Response) => {
+  res.cookie('access_token', '', { maxAge: 1 });
+  res.cookie('refresh_token', '', { maxAge: 1 });
+};
 
 export const refreshAccessTokenHandler = async (
   req: Request,
@@ -128,9 +132,9 @@ export const refreshAccessTokenHandler = async (
 
     // Check if the refresh token is in the refreshTokens array
     if (!refreshTokens.includes(refresh_token)) {
-      return next(
-        new AppError('Refresh token has already been used, login again', 403)
-      );
+      await redisClient.del(decoded.sub);
+      logout(res);
+      return res.redirect(`${config.get<string>('origin')}/login`);
     }
 
     // Check if the user has a valid session
@@ -167,16 +171,16 @@ export const refreshAccessTokenHandler = async (
   }
 };
 
-export const logoutHandler = (
+export const logoutHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    res.cookie('access_token', '', { maxAge: 1 });
-    res.cookie('refresh_token', '', { maxAge: 1 });
-
-    res.redirect(config.get<string>('origin'));
+    const user = res.locals.user;
+    await redisClient.del(user._id);
+    logout(res);
+    return res.redirect(`${config.get<string>('origin')}/login`);
   } catch (err: any) {
     next(err);
   }

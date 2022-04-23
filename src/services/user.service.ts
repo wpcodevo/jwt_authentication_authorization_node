@@ -1,4 +1,4 @@
-import { omit, get } from 'lodash';
+import { omit } from 'lodash';
 import { FilterQuery, QueryOptions } from 'mongoose';
 import config from 'config';
 import userModel, { User } from '../models/user.model';

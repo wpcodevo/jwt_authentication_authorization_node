@@ -25,7 +25,6 @@ export const verifyJwt = <T>(
     );
     return jwt.verify(token, publicKey) as T;
   } catch (error) {
-    console.log(error);
     return null;
   }
 };
