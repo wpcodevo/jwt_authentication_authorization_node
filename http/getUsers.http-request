@@ -9,5 +9,5 @@
   },
   "method": "GET",
   "title": "Get All Users",
-  "url": "http://localhost:8000/users"
+  "url": "http://localhost:8000/api/users"
 }
