@@ -2,9 +2,11 @@ require('dotenv').config();
 import express, { NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
 import config from 'config';
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import connectDB from './utils/connectDB';
 import userRouter from './routes/user.route';
+import authRouter from './routes/auth.route';
 
 const app = express();
 
@@ -16,11 +18,20 @@ app.use(express.json({ limit: '10kb' }));
 // 2. Cookie Parser
 app.use(cookieParser());
 
-// 3. Logger
+// 3. Cors
+app.use(
+  cors({
+    origin: config.get<string>('origin'),
+    credentials: true,
+  })
+);
+
+// 4. Logger
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
-// Routes
+// 5. Routes
 app.use('/api/users', userRouter);
+app.use('/api/auth', authRouter);
 
 // Testing
 app.get(
