@@ -9,5 +9,5 @@
   },
   "method": "POST",
   "title": "Login User",
-  "url": "http://localhost:8000/users/login"
+  "url": "http://localhost:8000/api/auth/login"
 }

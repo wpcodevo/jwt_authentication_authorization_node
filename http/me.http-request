@@ -9,5 +9,5 @@
   },
   "method": "GET",
   "title": "Get Me",
-  "url": "http://localhost:8000/users/me"
+  "url": "http://localhost:8000/api/users/me"
 }

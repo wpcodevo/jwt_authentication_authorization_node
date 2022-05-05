@@ -9,5 +9,5 @@
   },
   "method": "POST",
   "title": "Register User",
-  "url": "http://localhost:8000/users/register"
+  "url": "http://localhost:8000/api/auth/register"
 }
